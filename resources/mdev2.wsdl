@@ -1,0 +1,149 @@
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:tns="http://schemas.microsoft.com/windows/pki/2012/01/enrollment"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:enroll="http://schemas.microsoft.com/windows/management/2012/01/enrollment"
+  targetNamespace="http://schemas.microsoft.com/windows/pki/2012/01/enrollment">
+
+  <!-- Types Definition -->
+  <types>
+    <schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:enroll="http://schemas.microsoft.com/windows/management/2012/01/enrollment" targetNamespace="http://schemas.microsoft.com/windows/management/2012/01/enrollment"
+      elementFormDefault="qualified">
+      <element name="DiscoverHeader">
+        <complexType>
+          <sequence>
+            <element name="Action" type="string" />
+            <element name="MessageID" type="string" />
+            <element name="ReplyTo">
+              <complexType>
+                <sequence>
+                  <element name="Address" type="string" />
+                </sequence>
+              </complexType>
+            </element>
+            <element name="To" type="string" />
+          </sequence>
+        </complexType>
+      </element>
+
+      <element name="Discover">
+        <complexType>
+          <sequence>
+            <element name="request">
+              <complexType>
+                <sequence>
+                  <element minOccurs="1" maxOccurs="1" name="EmailAddress" type="enroll:EmailAddressType" />
+                  <element minOccurs="1" maxOccurs="1" name="RequestVersion" type="decimal" />
+                  <element minOccurs="1" maxOccurs="1" name="DeviceType" type="enroll:DeviceType" />
+                  <element minOccurs="1" maxOccurs="1" name="ApplicationVersion" type="enroll:DottedQuadType" />
+                  <element minOccurs="1" maxOccurs="1" name="OSEdition" type="unsignedInt" />
+                  <element name="AuthPolicies">
+                    <complexType>
+                      <sequence>
+                        <element minOccurs="1" maxOccurs="3" name="AuthPolicy" type="enroll:AuthPolicyType" />
+                      </sequence>
+                    </complexType>
+                  </element>
+                </sequence>
+              </complexType>
+            </element>
+          </sequence>
+        </complexType>
+      </element>
+
+      <element name="DiscoverResponseHeader">
+        <complexType>
+          <sequence>
+            <element name="Action" type="string" />
+            <element name="ActivityId" type="string" />
+            <element name="RelatesTo" type="string" />
+          </sequence>
+        </complexType>
+      </element>
+
+      <element name="DiscoverResponse">
+        <complexType>
+          <sequence>
+            <element name="DiscoverResult">
+              <complexType>
+                <sequence>
+                  <element minOccurs="1" maxOccurs="1" name="AuthPolicy" type="enroll:AuthPolicyType" />
+                  <element minOccurs="0" maxOccurs="1" name="EnrollmentPolicyServiceUrl" nillable="true" type="anyURI" />
+                  <element minOccurs="1" maxOccurs="1" name="EnrollmentServiceUrl" type="anyURI" />
+                  <element minOccurs="0" maxOccurs="1" name="AuthenticationServiceUrl" nillable="true" type="anyURI" />
+                  <element minOccurs="0" maxOccurs="1" name="EnrollmentVersion" nillable="true" type="decimal" />
+                </sequence>
+              </complexType>
+            </element>
+          </sequence>
+        </complexType>
+      </element>
+
+      <simpleType name="AuthPolicyType">
+        <restriction base="string">
+          <enumeration value="Certificate" />
+          <enumeration value="Federated" />
+          <enumeration value="OnPremise" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="DottedQuadType">
+        <restriction base="string">
+          <pattern value="([0-9]*\.){3}[0-9]*" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="DeviceType">
+        <restriction base="string">
+          <enumeration value="CIMClient_Windows" />
+          <enumeration value="WindowsPhone" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="EmailAddressType">
+        <restriction base="string">
+          <pattern value="[^@]+@[^\.]+\..+" />
+        </restriction>
+      </simpleType>
+    </schema>
+  </types>
+
+  <!-- Message Definitions -->
+  <message name="DiscoverRequestMessage">
+    <part name="Header" element="enroll:DiscoverHeader" />
+    <part name="parameters" element="enroll:Discover" />
+  </message>
+  <message name="DiscoverResponseMessage">
+    <part name="Header" element="enroll:DiscoverResponseHeader" />
+    <part name="parameters" element="enroll:DiscoverResponse" />
+  </message>
+
+  <!-- Port Type -->
+  <portType name="IDiscoveryService">
+    <operation name="Discover">
+      <input wsaw:Action="http://schemas.microsoft.com/windows/management/2012/01/enrollment/IDiscoveryService/Discover" name="DiscoverRequestMessage" message="tns:DiscoverRequestMessage" />
+      <output wsaw:Action="http://schemas.microsoft.com/windows/management/2012/01/enrollment/IDiscoveryService/DiscoverResponse" name="DiscoverResponseMessage" message="tns:DiscoverResponseMessage" />
+    </operation>
+  </portType>
+
+  <!-- Binding -->
+  <binding name="IDiscoveryServiceBinding" type="tns:IDiscoveryService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+    <http:binding verb="POST" />
+    <operation name="Discover">
+      <soap:operation soapAction="http://schemas.microsoft.com/windows/management/2012/01/enrollment/IDiscoveryService/Discover" />
+      <input>
+        <soap:header message="tns:DiscoverRequestMessage" part="Header" use="literal" />
+        <soap:body parts="parameters" use="literal" />
+      </input>
+      <output>
+        <soap:header message="tns:DiscoverResponseMessage" part="Header" use="literal" />
+        <soap:body parts="parameters" use="literal" />
+      </output>
+    </operation>
+  </binding>
+
+  <!-- Service -->
+  <service name="DiscoveryService">
+    <port name="IDiscoveryServicePort" binding="tns:IDiscoveryServiceBinding">
+      <soap:address location="https://enterpriseenrollment.mdmwindows.com/EnrollmentServer/Discovery.svc" />
+    </port>
+  </service>
+</definitions>

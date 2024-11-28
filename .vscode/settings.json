@@ -1,0 +1,10 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./server/Cargo.toml",
+        "./enrollment/Cargo.toml"
+    ],
+    "xml.format.preserveAttributeLineBreaks": false,
+    "xml.format.maxLineWidth": 240,
+    "xml.format.xsiSchemaLocationSplit": "onPair",
+    //"xml.format.splitAttributes": "alignWithFirstAttr",
+}

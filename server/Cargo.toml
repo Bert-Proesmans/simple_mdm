@@ -1,0 +1,35 @@
+[package]
+name = "simple_mdm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "cli"
+required-features = []
+
+[features]
+
+[dependencies]
+axum = { version = "0.8.0-alpha.1" } # Upgrade to 0.8 later
+http-body-util = { version = "0.1.0" }
+futures-util = { version = "0.3", default-features = false }
+hyper = { version = "1", features = ["full"] }
+hyper-util = { version = "0.1" }
+tokio = { version = "1", features = ["full"] }
+tokio-native-tls = "0.3"
+tower = { version = "0.5", features = ["make"] }
+tower-service = "0.3" # WARN; Tower-service version is NOT in lockstep with Tower !!
+tower-http = { version = "0.6", features = ["limit", "trace"] }
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+yaserde = { version = "0.12", features = [] }
+yaserde_derive = { version = "0.12", features = [] }
+# WARN; Yaserde manual de/serialization has a leaky abstraction on xml-rs
+xml-rs = {version = "0.8.3" }
+rust_decimal = { version = "1.36" }
+# WARN; Cargo will automatically locate the requested crate within the repository.
+# ERROR; Specifiying a path within the repository, to indicate a specific crate, is not supported!
+#xsd-macro-utils = { version = "0.1", git = "https://github.com/lumeohq/xsd-parser-rs.git", rev = "d476e854b28b197442096c268d79263c50300c9e"}
+#xsd-types = { version = "0.1", git = "https://github.com/lumeohq/xsd-parser-rs.git", rev = "d476e854b28b197442096c268d79263c50300c9e"}
