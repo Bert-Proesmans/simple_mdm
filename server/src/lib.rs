@@ -17,7 +17,7 @@ use futures_util::pin_mut;
 use http_body_util::BodyExt;
 use hyper::{body::Incoming, Method, StatusCode};
 use hyper_util::rt::{TokioExecutor, TokioIo};
-use microsoft_protocol::mde_v2::{discover_header::ReplyToType, DiscoverHeader};
+use microsoft_protocol::{mde_v2::{discover_header::ReplyToType, DiscoverHeader}, xcep::ClientLastUpdate};
 use std::{path::PathBuf, str::FromStr, time::Duration};
 use tokio::net::TcpListener;
 use tokio_native_tls::{
@@ -29,7 +29,7 @@ use tower_http::trace::TraceLayer;
 use tower_service::Service;
 use tracing::{debug_span, enabled, error, info, info_span, warn, Level, Span};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use xsd_primitives::Decimal;
+use xsd_primitives::{DateTime, Decimal};
 use yaserde::ser::Config;
 
 mod microsoft_protocol;
@@ -194,6 +194,7 @@ async fn post_discovery_handler(
     payload: String,
 ) -> impl IntoResponse {
     use microsoft_protocol::mde_v2::{discover_response::*, *};
+    use microsoft_protocol::soap::*;
 
     let parsed: Result<SoapEnvelope<DiscoverRequestBody, DiscoverHeader>, _> =
         yaserde::de::from_str(&payload);
@@ -255,6 +256,103 @@ async fn post_discovery_handler(
     }
 }
 
-async fn policy_handler() {}
+async fn policy_handler(method: Method, headers: HeaderMap, payload: String) -> impl IntoResponse {
+    use microsoft_protocol::soap::*;
+    use microsoft_protocol::xcep;
+
+    tracing::debug!("Payload: {payload}");
+    let parsed: Result<SoapEnvelope<xcep::GetPoliciesRequestBody>, _> =
+        yaserde::de::from_str(&payload);
+
+    // let test_request = SoapEnvelope {
+    //     header: DefaultHeader {},
+    //     body: xcep::GetPoliciesRequestBody {
+    //         get_policies: xcep::GetPolicies {
+    //             client: xcep::Client {
+    //                 client_last_update: Some(ClientLastUpdate {
+    //                     is_null: None,
+    //                     value: Some(DateTime::from_str("2024-11-29 22:00:00.000").unwrap())
+    //                 }),
+    //                 //preferred_language: None,
+    //             },
+    //             //request_filter: None,
+    //         },
+    //     },
+    //     encoding_style: None,
+    //     tnsattr: None,
+    //     urnattr: None,
+    //     xsiattr: None,
+    // };
+    // match yaserde::ser::to_string_with_config(
+    //     &test_request,
+    //     &Config {
+    //         perform_indent: true,
+    //         write_document_declaration: false,
+    //         indent_string: None,
+    //     },
+    // ) {
+    //     Ok(xml) => tracing::debug!(xml),
+    //     Err(error) => tracing::error!(error),
+    // }
+
+    match parsed {
+        Ok(request) => {
+            println!("SOAP request: {:?}", request.body.get_policies);
+            println!(
+                "Received SOAP request with ID: {:?}",
+                // request.header.message_id
+                0,
+            );
+
+            // let response = SoapEnvelope {
+            //     header: DiscoverResponseHeader {
+            //         action: "http://schemas.microsoft.com/windows/management/2012/01/enrollment/IDiscoveryService/DiscoverResponse".into(),
+            //         activity_id: None,
+            //         relates_to: request.header.message_id
+            //     },
+            //     body: DiscoverResponseBody {
+            //         discover: DiscoverResponse {
+            //             response: DiscoverResult {
+            //                 auth_policy: AuthPolicyType::OnPremise,
+            //                 enrollment_version: Some(Decimal::from_str("4.0").unwrap()),
+            //                 // WARN; Hardcoded
+            //                 enrollment_policy_service_url: Some("https://mdmwindows.com/EnrollmentServer/Policy.svc".into()),
+            //                 // WARN; Hardcoded
+            //                 enrollment_service_url: "https://mdmwindows.com/EnrollmentServer/Enrollment.svc".into(),
+            //                 // NOTE; Only applicable for auth_policy == AuthPolicyType::Federated
+            //                 authentication_service_url: None,
+            //             }
+            //         }
+            //     },
+            //     encoding_style: None,
+            //     tnsattr: None,
+            //     urnattr: None,
+            //     xsiattr: None,
+            // };
+
+            // match yaserde::ser::to_string(&response) {
+            match Err("Not implemented") {
+                Ok(xml) => Response::builder()
+                    .header("Content-Type", "application/soap+xml; charset=utf-8")
+                    .body(xml)
+                    .unwrap(),
+                Err(err) => {
+                    eprintln!("Error serializing response: {}", err);
+                    Response::builder()
+                        .status(500)
+                        .body("Internal Server Error".to_string())
+                        .unwrap()
+                }
+            }
+        }
+        Err(err) => {
+            eprintln!("Error parsing SOAP request: {}", err);
+            Response::builder()
+                .status(400)
+                .body("Bad Request".to_string())
+                .unwrap()
+        }
+    }
+}
 async fn enroll_handler() {}
 async fn manage_handler() {}

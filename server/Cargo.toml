@@ -33,3 +33,4 @@ rust_decimal = { version = "1.36" }
 # ERROR; Specifiying a path within the repository, to indicate a specific crate, is not supported!
 #xsd-macro-utils = { version = "0.1", git = "https://github.com/lumeohq/xsd-parser-rs.git", rev = "d476e854b28b197442096c268d79263c50300c9e"}
 #xsd-types = { version = "0.1", git = "https://github.com/lumeohq/xsd-parser-rs.git", rev = "d476e854b28b197442096c268d79263c50300c9e"}
+chrono = { version = "0.4" }
